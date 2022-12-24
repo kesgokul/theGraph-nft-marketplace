@@ -1,53 +1,98 @@
+import { Address, BigInt } from "@graphprotocol/graph-ts";
 import {
   ItemBought as ItemBoughtEvent,
   ItemListed as ItemListedEvent,
-  ListingCancelled as ListingCancelledEvent
-} from "../generated/NftMarketplace/NftMarketplace"
-import { ItemBought, ItemListed, ListingCancelled } from "../generated/schema"
+  ListingCancelled as ListingCancelledEvent,
+} from "../generated/NftMarketplace/NftMarketplace";
+import {
+  ItemBought,
+  ItemListed,
+  ListingCancelled,
+  ActiveItem,
+} from "../generated/schema";
 
 export function handleItemBought(event: ItemBoughtEvent): void {
-  let entity = new ItemBought(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.buyer = event.params.buyer
-  entity.nftAddress = event.params.nftAddress
-  entity.tokenId = event.params.tokenId
-  entity.price = event.params.price
+  const id: string = getIdFromParams(
+    event.params.tokenId,
+    event.params.nftAddress
+  );
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  let activeItem = ActiveItem.load(id);
+  let itemBought = ItemBought.load(id);
 
-  entity.save()
+  if (!itemBought) {
+    itemBought = new ItemBought(id);
+  }
+
+  itemBought.tokenId = event.params.tokenId;
+  itemBought.nftAddress = event.params.nftAddress;
+  itemBought.buyer = event.params.buyer;
+
+  activeItem!.buyer = event.params.buyer;
+
+  itemBought.save();
+  activeItem!.save();
 }
 
 export function handleItemListed(event: ItemListedEvent): void {
-  let entity = new ItemListed(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.seller = event.params.seller
-  entity.nftAddress = event.params.nftAddress
-  entity.tokenId = event.params.tokenId
-  entity.price = event.params.price
+  const id: string = getIdFromParams(
+    event.params.tokenId,
+    event.params.nftAddress
+  );
+  let itemListed = ItemListed.load(id);
+  let activeItem = ActiveItem.load(id);
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  if (!activeItem) {
+    activeItem = new ActiveItem(id);
+  }
+  if (!itemListed) {
+    itemListed = new ItemListed(id);
+  }
 
-  entity.save()
+  activeItem.nftAddress = event.params.nftAddress;
+  itemListed.nftAddress = event.params.nftAddress;
+
+  activeItem.tokenId = event.params.tokenId;
+  itemListed.tokenId = event.params.tokenId;
+
+  activeItem.seller = event.params.seller;
+  itemListed.seller = event.params.seller;
+
+  activeItem.price = event.params.price;
+  itemListed.price = event.params.price;
+
+  activeItem.buyer = Address.fromString(
+    "0x0000000000000000000000000000000000000000"
+  );
+
+  activeItem.save();
+  itemListed.save();
 }
 
 export function handleListingCancelled(event: ListingCancelledEvent): void {
-  let entity = new ListingCancelled(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.seller = event.params.seller
-  entity.nftAddress = event.params.nftAddress
-  entity.tokenId = event.params.tokenId
+  const id: string = getIdFromParams(
+    event.params.tokenId,
+    event.params.nftAddress
+  );
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  let activeItem = ActiveItem.load(id);
+  let listingCancelled = ListingCancelled.load(id);
 
-  entity.save()
+  if (!listingCancelled) {
+    listingCancelled = new ListingCancelled(id);
+  }
+
+  listingCancelled.tokenId = event.params.tokenId;
+  listingCancelled.nftAddress = event.params.nftAddress;
+  listingCancelled.seller = event.params.seller;
+  activeItem!.buyer = Address.fromString(
+    "0x000000000000000000000000000000000000dEaD"
+  );
+
+  listingCancelled.save();
+  activeItem!.save();
+}
+
+function getIdFromParams(tokenId: BigInt, nftAddress: Address): string {
+  return tokenId.toHexString() + nftAddress.toHexString();
 }

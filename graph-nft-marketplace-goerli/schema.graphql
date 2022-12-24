@@ -1,31 +1,30 @@
-type ItemBought @entity(immutable: true) {
-  id: Bytes!
+type ActiveItem @entity {
+  id: ID!
+  buyer: Bytes!
+  seller: Bytes!
+  nftAddress: Bytes!
+  tokenId: BigInt!
+  price: BigInt
+}
+type ItemBought @entity {
+  id: ID!
   buyer: Bytes! # address
   nftAddress: Bytes! # address
   tokenId: BigInt! # uint256
   price: BigInt! # uint256
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
 }
 
-type ItemListed @entity(immutable: true) {
-  id: Bytes!
+type ItemListed @entity {
+  id: ID!
   seller: Bytes! # address
   nftAddress: Bytes! # address
   tokenId: BigInt! # uint256
   price: BigInt! # uint256
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
 }
 
-type ListingCancelled @entity(immutable: true) {
-  id: Bytes!
+type ListingCancelled @entity {
+  id: ID!
   seller: Bytes! # address
   nftAddress: Bytes! # address
   tokenId: BigInt! # uint256
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
 }
